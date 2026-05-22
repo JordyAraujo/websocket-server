@@ -1,10 +1,12 @@
 import { WebSocket } from 'ws'
 
+export type ClientType =
+  | 'tv'
+  | 'controller'
+
 export interface Client {
   socket: WebSocket
-
-  type: 'tv' | 'controller'
-
+  type: ClientType
   sessionId?: string
 }
 

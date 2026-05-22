@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   websocket-server:
     build: .
@@ -12,4 +10,12 @@ services:
     command: npm run dev
     environment:
       - NODE_ENV=development
+    networks:
+      - websocket-net
     restart: unless-stopped
+
+networks:
+  websocket-net:
+    name: websocket-net
+    driver: bridge
+    attachable: true
