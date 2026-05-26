@@ -6,7 +6,8 @@ export function debugClients() {
   for (const [, client] of clients) {
     console.log({
       type: client.type,
-      sessionId: client.sessionId
+      sessionId: client.sessionId,
+      clientId: client.clientId
     })
   }
 

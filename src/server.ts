@@ -1,9 +1,9 @@
 import { WebSocketServer } from 'ws'
-import { generateSessionId, sessions } from './sessions'
-import { clients } from './clients'
+import { createSession, sessions } from './sessions'
+import { clients, setClient } from './clients'
 import { debugClients } from './debuggers'
-import { isInputMessage } from './messages/input'
-import { isCreateSessionMessage, isJoinSessionMessage } from './messages/session'
+import { createInputMessage, isInputMessage } from './messages/input'
+import { createJoinedSessionMessage, createPlayerJoinedMessage, createSessionCreatedMessage, isCreateSessionMessage, isJoinSessionMessage, isPlayerJoinedMessage } from './messages/session'
 
 const wss = new WebSocketServer({
     port: 3001
@@ -12,7 +12,6 @@ const wss = new WebSocketServer({
 wss.on('connection', (ws) => {
     ws.on('message', (message) => {
         const data = JSON.parse(message.toString())
-        console.log(data)
 
         if (isInputMessage(data)) {
             const client = clients.get(ws)
@@ -24,10 +23,7 @@ wss.on('connection', (ws) => {
             if (!session || !session.tv) return
 
             session.tv.send(
-                JSON.stringify({
-                    type: 'input',
-                    payload: data.payload
-                })
+                JSON.stringify(createInputMessage(data.payload.button))
             )
             return
         }
@@ -37,39 +33,25 @@ wss.on('connection', (ws) => {
 
             if (!session || !session.tv) return
 
-            clients.set(ws, {
-                socket: ws,
-                type: 'controller',
-                sessionId: data.payload.sessionId
-            })
+            setClient(ws, 'controller', data.payload.sessionId, data.payload.clientId)
+            session.tv.send(
+                JSON.stringify(createJoinedSessionMessage(data.payload.sessionId, data.payload.clientId))
+            )
+            ws.send(
+                JSON.stringify(createPlayerJoinedMessage(data.payload.sessionId, data.payload.clientId))
+            )
 
             debugClients()
             return
         }
 
         if (isCreateSessionMessage(data)) {
-            const sessionId = generateSessionId()
-
-            sessions.set(sessionId, {
-                id: sessionId,
-                tv: ws,
-                controllers: []
-            })
-
-            clients.set(ws, {
-                socket: ws,
-                type: 'tv',
-                sessionId
-            })
-
+            const sessionId = createSession(ws)
+            setClient(ws, 'tv', sessionId, sessionId)
             ws.send(
-                JSON.stringify({
-                    type: 'session_created',
-                    payload: {
-                        sessionId
-                    }
-                })
+                JSON.stringify(createSessionCreatedMessage(sessionId))
             )
+
             debugClients()
             return
         }

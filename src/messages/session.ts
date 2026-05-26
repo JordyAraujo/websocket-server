@@ -11,29 +11,72 @@ export interface SessionCreatedMessage {
   }
 }
 
+export const createSessionCreatedMessage = (sessionId: string): SessionCreatedMessage => ({
+  type: 'session_created',
+  payload: {
+    sessionId
+  }
+})
+
 export interface JoinSessionMessage {
   type: 'join_session'
   payload: {
-    sessionId: string
+    sessionId: string,
+    clientId: string
   }
 }
 
+export interface JoinedSessionMessage {
+  type: 'joined_session',
+  payload: {
+    sessionId: string,
+    clientId: string
+  }
+}
+
+export const createJoinedSessionMessage = (sessionId: string, clientId: string): JoinedSessionMessage => ({
+  type: 'joined_session',
+  payload: {
+    sessionId,
+    clientId
+  }
+})
+
+export interface PlayerJoinedMessage {
+  type: 'player_joined',
+  payload: {
+    sessionId: string,
+    clientId: string
+  }
+}
+
+export const createPlayerJoinedMessage = (sessionId: string, clientId: string): PlayerJoinedMessage => ({
+  type: 'player_joined',
+  payload: {
+    sessionId,
+    clientId
+  }
+})
+
 export function isCreateSessionMessage(value: unknown): value is CreateSessionMessage {
-  return isObject(value) && !('payload' in value)
+  return isObject(value) && value.type === 'create_session' && !('payload' in value)
 }
 
 export function isJoinSessionMessage(value: unknown): value is JoinSessionMessage {
   return (
     isObject(value) &&
+    value.type === 'join_session' &&
     isObject(value.payload) &&
-    typeof value.payload.sessionId === 'string'
+    typeof value.payload.sessionId === 'string' &&
+    typeof value.payload.clientId === 'string'
   )
 }
 
-export function isSessionCreatedMessage(value: unknown): value is SessionCreatedMessage {
+export function isPlayerJoinedMessage(value: unknown): value is PlayerJoinedMessage {
   return (
     isObject(value) &&
+    value.type === 'player_joined' &&
     isObject(value.payload) &&
-    typeof value.payload.sessionId === 'string'
+    typeof value.payload.clientId === 'string'
   )
 }
