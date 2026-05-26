@@ -42,22 +42,6 @@ export const createJoinedSessionMessage = (sessionId: string, clientId: string):
   }
 })
 
-export interface PlayerJoinedMessage {
-  type: 'player_joined',
-  payload: {
-    sessionId: string,
-    clientId: string
-  }
-}
-
-export const createPlayerJoinedMessage = (sessionId: string, clientId: string): PlayerJoinedMessage => ({
-  type: 'player_joined',
-  payload: {
-    sessionId,
-    clientId
-  }
-})
-
 export function isCreateSessionMessage(value: unknown): value is CreateSessionMessage {
   return isObject(value) && value.type === 'create_session' && !('payload' in value)
 }
@@ -68,15 +52,6 @@ export function isJoinSessionMessage(value: unknown): value is JoinSessionMessag
     value.type === 'join_session' &&
     isObject(value.payload) &&
     typeof value.payload.sessionId === 'string' &&
-    typeof value.payload.clientId === 'string'
-  )
-}
-
-export function isPlayerJoinedMessage(value: unknown): value is PlayerJoinedMessage {
-  return (
-    isObject(value) &&
-    value.type === 'player_joined' &&
-    isObject(value.payload) &&
     typeof value.payload.clientId === 'string'
   )
 }
