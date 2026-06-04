@@ -13,3 +13,9 @@ export function debugClients() {
 
   console.log('---------------')
 }
+
+export function debugMessage(message: any, sent: boolean = true, clientId: string|null = null) {
+  console.log(`--- MESSAGE ${sent ? 'SENT' : `RECEIVED FROM ${clientId}`} ---`)
+  console.log({ message })
+  console.log('---------------')
+}
