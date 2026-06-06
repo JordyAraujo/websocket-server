@@ -1,21 +1,29 @@
 import { WebSocket } from 'ws'
 
+export interface Controller {
+  socket: WebSocket
+  clientId: string
+  playerName: string
+  color?: string
+}
+
 export interface Session {
   id: string
   tv: WebSocket
-  controllers: WebSocket[]
+  controllers: Controller[]
 }
 
 export const sessions = new Map<string, Session>()
 
 export function createSession(tvSocket: WebSocket) {
   const sessionId = generateSessionId()
-  sessions.set(sessionId, {
+  const session: Session = {
     id: sessionId,
     tv: tvSocket,
     controllers: []
-  })
-  return sessionId
+  }
+  sessions.set(sessionId, session)
+  return session
 }
 
 function generateSessionId() {

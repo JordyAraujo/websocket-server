@@ -1,3 +1,4 @@
+import { Controller } from '../sessions'
 import { isObject } from './util'
 
 export interface CreateSessionMessage {
@@ -11,6 +12,23 @@ export interface SessionCreatedMessage {
   }
 }
 
+export interface PlayerJoinedMessage {
+  type: 'player_joined'
+  payload: {
+    players: {}
+  }
+}
+
+export const createPlayerJoinedMessage = (controllers: Controller[]): PlayerJoinedMessage => ({
+  type: 'player_joined',
+  payload: {
+    players: controllers.map(controller => ({
+      clientId: controller.clientId,
+      playerName: controller.playerName
+    }))
+  }
+})
+
 export const createSessionCreatedMessage = (sessionId: string): SessionCreatedMessage => ({
   type: 'session_created',
   payload: {
@@ -22,25 +40,10 @@ export interface JoinSessionMessage {
   type: 'join_session'
   payload: {
     sessionId: string,
-    clientId: string
+    clientId: string,
+    playerName: string
   }
 }
-
-export interface JoinedSessionMessage {
-  type: 'joined_session',
-  payload: {
-    sessionId: string,
-    clientId: string
-  }
-}
-
-export const createJoinedSessionMessage = (sessionId: string, clientId: string): JoinedSessionMessage => ({
-  type: 'joined_session',
-  payload: {
-    sessionId,
-    clientId
-  }
-})
 
 export function isCreateSessionMessage(value: unknown): value is CreateSessionMessage {
   return isObject(value) && value.type === 'create_session' && !('payload' in value)
@@ -52,6 +55,7 @@ export function isJoinSessionMessage(value: unknown): value is JoinSessionMessag
     value.type === 'join_session' &&
     isObject(value.payload) &&
     typeof value.payload.sessionId === 'string' &&
-    typeof value.payload.clientId === 'string'
+    typeof value.payload.clientId === 'string' &&
+    typeof value.payload.playerName === 'string'
   )
 }

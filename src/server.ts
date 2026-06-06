@@ -1,10 +1,10 @@
 import { WebSocketServer } from 'ws'
 import { createSession, sessions } from './sessions'
-import { clients, setClient } from './clients'
-import { debugClients, debugMessage } from './debuggers'
+import { debugClients, debugControllers, debugMessage } from './debuggers'
 import { createInputMessage, isInputMessage } from './messages/input'
-import { createJoinedSessionMessage, createSessionCreatedMessage, isCreateSessionMessage, isJoinSessionMessage } from './messages/session'
+import { createPlayerJoinedMessage, createSessionCreatedMessage, isCreateSessionMessage, isJoinSessionMessage } from './messages/session'
 import { createErrorMessage } from './messages/error'
+import { clients, setClient } from './clients'
 
 const wss = new WebSocketServer({
     port: 3001
@@ -16,9 +16,9 @@ wss.on('connection', (ws) => {
         debugMessage(data, false, clients.get(ws)?.clientId || null)
 
         if (isCreateSessionMessage(data)) {
-            const sessionId = createSession(ws)
-            setClient(ws, 'tv', sessionId, sessionId)
-            const message = createSessionCreatedMessage(sessionId)
+            const session = createSession(ws)
+            setClient(ws, 'tv', session.id, session.id)
+            const message = createSessionCreatedMessage(session.id)
             ws.send(
                 JSON.stringify(message)
             )
@@ -39,21 +39,18 @@ wss.on('connection', (ws) => {
                 return
             }
 
-            session.controllers.push(ws)
+            setClient(ws, 'controller', data.payload.sessionId, data.payload.clientId, data.payload.playerName)
 
-            setClient(ws, 'controller', data.payload.sessionId, data.payload.clientId)
-            let message = createJoinedSessionMessage(data.payload.sessionId, data.payload.clientId)
-            session.tv.send(
-                JSON.stringify(message)
-            )
-            debugMessage(message)
-            message = createJoinedSessionMessage(data.payload.sessionId, data.payload.clientId)
-            ws.send(
-                JSON.stringify(message)
-            )
-            debugMessage(message)
+            const message = createPlayerJoinedMessage(session.controllers)
 
-            debugClients()
+            clients.forEach((client) => {
+                client.socket.send(
+                    JSON.stringify(message)
+                )
+            })
+
+            debugMessage(message)
+            debugControllers(session.controllers)
             return
         }
 

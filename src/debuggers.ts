@@ -1,16 +1,29 @@
-import { clients } from './clients'
+import { clients } from "./clients"
+import { Controller } from "./sessions"
 
-export function debugClients() {
-  console.log('--- CLIENTS ---')
+export function debugControllers(controllers: Controller[]) {
+  console.log('--- CONTROLLERS ---')
 
-  for (const [, client] of clients) {
+  for (const controller of controllers) {
     console.log({
-      type: client.type,
-      sessionId: client.sessionId,
-      clientId: client.clientId
+      clientId: controller.clientId,
+      playerName: controller.playerName,
+      color: controller.color
     })
   }
 
+  console.log('---------------')
+}
+
+export function debugClients() {
+  console.log('--- CLIENTS ---')
+  clients.forEach((client) => {
+    console.log({
+      sessionId: client.sessionId,
+      clientId: client.clientId,
+      type: client.type,
+    })
+  })
   console.log('---------------')
 }
 
