@@ -18,24 +18,20 @@ export const clients =
 export function setClient(socket: WebSocket, type: ClientType, sessionId: string, clientId: string, playerName: string = '') {
   if (type === 'controller') {
     const session = sessions.get(sessionId)
-    if (session) {
-      session.controllers.push({
-        socket: socket,
-        clientId: clientId,
-        playerName: playerName
-      })
-    }
+    if (!session || !session.tv) return
+
+    session.controllers.set(clientId, {
+      socket: socket,
+      clientId: clientId,
+      playerName: playerName
+    })
   }
-  clients.set(socket, {
+  const client = {
     socket,
     type,
     sessionId,
     clientId
-  })
-}
-
-export function getClientById(clientId: string): Client | undefined {
-  return Array
-    .from(clients.values())
-    .find(client => client.clientId === clientId)
+  }
+  clients.set(socket, client)
+  return client
 }

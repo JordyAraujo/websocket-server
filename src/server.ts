@@ -1,10 +1,11 @@
-import { WebSocketServer } from 'ws'
-import { createSession, sessions } from './sessions'
-import { debugClients, debugControllers, debugMessage } from './debuggers'
-import { createInputMessage, isInputMessage } from './messages/input'
-import { createPlayerJoinedMessage, createSessionCreatedMessage, isCreateSessionMessage, isJoinSessionMessage } from './messages/session'
-import { createErrorMessage } from './messages/error'
-import { clients, setClient } from './clients'
+import { WebSocketServer } from "ws"
+import { debugClients, debugControllers, debugMessage } from "./debuggers"
+import { clients, setClient } from "./clients"
+import { createErrorMessage } from "./messages/utils/error"
+import { isCreateSessionMessage, createSessionCreatedMessage, isJoinSessionMessage, createPlayerJoinedMessage, isPlayerColorMessage, createPlayersUpdatedMessage } from "./messages/utils/session"
+import { ControllerData, createSession, sessions } from "./sessions"
+
+const MAX_PLAYERS_PER_SESSION = 4
 
 const wss = new WebSocketServer({
     port: 3001
@@ -13,16 +14,16 @@ const wss = new WebSocketServer({
 wss.on('connection', (ws) => {
     ws.on('message', (message) => {
         const data = JSON.parse(message.toString())
-        debugMessage(data, false, clients.get(ws)?.clientId || null)
+        debugMessage(data, clients.get(ws)?.clientId || null, false)
 
         if (isCreateSessionMessage(data)) {
             const session = createSession(ws)
-            setClient(ws, 'tv', session.id, session.id)
+            const client = setClient(ws, 'tv', session.id, session.id)
             const message = createSessionCreatedMessage(session.id)
             ws.send(
                 JSON.stringify(message)
             )
-            debugMessage(message)
+            debugMessage(message, client?.clientId)
             debugClients()
             return
         }
@@ -32,7 +33,7 @@ wss.on('connection', (ws) => {
 
             if (!session || !session.tv) return
 
-            if (session.controllers.length >= 4) {
+            if (session.controllers.size >= MAX_PLAYERS_PER_SESSION) {
                 ws.send(
                     JSON.stringify(createErrorMessage('Session is full'))
                 )
@@ -41,34 +42,44 @@ wss.on('connection', (ws) => {
 
             setClient(ws, 'controller', data.payload.sessionId, data.payload.clientId, data.payload.playerName)
 
-            const message = createPlayerJoinedMessage(session.controllers)
-
-            clients.forEach((client) => {
-                client.socket.send(
-                    JSON.stringify(message)
-                )
+            const message = createPlayerJoinedMessage({
+                clientId: data.payload.clientId,
+                playerName: data.payload.playerName
             })
-
-            debugMessage(message)
-            debugControllers(session.controllers)
-            return
-        }
-
-        if (isInputMessage(data)) {
-            const client = clients.get(ws)
-
-            if (!client || !client.sessionId) return
-
-            const session = sessions.get(client.sessionId)
-
-            if (!session || !session.tv) return
-
-            const message = createInputMessage(data.payload.button)
 
             session.tv.send(
                 JSON.stringify(message)
             )
-            debugMessage(message)
+
+            debugMessage(message, session.id)
+            debugControllers(session.controllers)
+            return
+        }
+
+        if (isPlayerColorMessage(data)) {
+            const session = sessions.get(data.payload.sessionId)
+
+            if (!session || !session.tv) return
+
+            const updatedPlayer = session.controllers.get(data.payload.clientId)
+            if (updatedPlayer) {
+                updatedPlayer.color = data.payload.color
+            }
+
+            const message = createPlayersUpdatedMessage(Array.from(session.controllers.values()).map(c => ({
+                clientId: c.clientId,
+                playerName: c.playerName,
+                color: c.color
+            })));
+
+            session.controllers.forEach((controller) => {
+                controller.socket.send(
+                    JSON.stringify(message)
+                )
+                debugMessage(message, controller.clientId)
+            })
+
+            debugControllers(session.controllers)
             return
         }
     })

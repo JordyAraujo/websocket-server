@@ -4,10 +4,3 @@ export interface ErrorMessage {
     message: string
   }
 }
-
-export const createErrorMessage = (message: string): ErrorMessage => ({
-  type: 'error',
-  payload: {
-    message
-  }
-})
