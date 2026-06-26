@@ -2,7 +2,7 @@ import { WebSocketServer } from "ws"
 import { debugClients, debugControllers, debugMessage } from "./debuggers"
 import { clients, setClient } from "./clients"
 import { createErrorMessage } from "./messages/utils/error"
-import { isCreateSessionMessage, createSessionCreatedMessage, isJoinSessionMessage, createPlayerJoinedMessage, isPlayerColorMessage, createPlayersUpdatedMessage } from "./messages/utils/session"
+import { isCreateSessionMessage, createSessionCreatedMessage, isJoinSessionMessage, createPlayerJoinedMessage, isPlayerColorMessage, createPlayersUpdatedMessage, isStartGameMessage, createGameStartedMessage } from "./messages/utils/session"
 import { ControllerData, createSession, sessions } from "./sessions"
 
 const MAX_PLAYERS_PER_SESSION = 4
@@ -70,7 +70,7 @@ wss.on('connection', (ws) => {
                 clientId: c.clientId,
                 playerName: c.playerName,
                 color: c.color
-            })));
+            })))
 
             session.controllers.forEach((controller) => {
                 controller.socket.send(
@@ -81,6 +81,21 @@ wss.on('connection', (ws) => {
 
             debugControllers(session.controllers)
             return
+        }
+
+        if (isStartGameMessage(data)) {
+            const session = sessions.get(data.payload.sessionId)
+
+            if (!session || !session.tv) return
+
+            const message = createGameStartedMessage()
+
+            session.controllers.forEach((controller) => {
+                controller.socket.send(
+                    JSON.stringify(message)
+                )
+                debugMessage(message, controller.clientId)
+            })
         }
     })
 })

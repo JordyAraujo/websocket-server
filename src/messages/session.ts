@@ -14,8 +14,8 @@ export interface SessionCreatedMessage {
 export interface JoinSessionMessage {
   type: 'join_session'
   payload: {
-    sessionId: string,
-    clientId: string,
+    sessionId: string
+    clientId: string
     playerName: string
   }
 }
@@ -42,4 +42,15 @@ export interface PlayersUpdatedMessage {
   payload: {
     players: ControllerData[]
   }
+}
+
+export interface StartGameMessage {
+  type: 'start_game'
+  payload: {
+    sessionId: string
+  }
+}
+
+export interface GameStartedMessage {
+  type: 'game_started'
 }

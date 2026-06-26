@@ -1,4 +1,4 @@
-import { ErrorMessage } from "../error";
+import { ErrorMessage } from "../error"
 
 export const createErrorMessage = (message: string): ErrorMessage => ({
   type: 'error',

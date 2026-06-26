@@ -1,5 +1,5 @@
 import { ControllerData } from "../../sessions"
-import { CreateSessionMessage, JoinSessionMessage, PlayerColorMessage, PlayerJoinedMessage, PlayersUpdatedMessage, SessionCreatedMessage } from "../session"
+import { CreateSessionMessage, GameStartedMessage, JoinSessionMessage, PlayerColorMessage, PlayerJoinedMessage, PlayersUpdatedMessage, SessionCreatedMessage, StartGameMessage } from "../session"
 import { isObject } from "./object"
 
 export const createPlayerJoinedMessage = (controller: ControllerData): PlayerJoinedMessage => ({
@@ -48,4 +48,17 @@ export const createPlayersUpdatedMessage = (players: ControllerData[]): PlayersU
   payload: {
     players
   }
+})
+
+export function isStartGameMessage(value: unknown): value is StartGameMessage {
+  return (
+    isObject(value) &&
+    value.type === 'start_game' &&
+    isObject(value.payload) &&
+    typeof value.payload.sessionId === 'string'
+  )
+}
+
+export const createGameStartedMessage = (): GameStartedMessage => ({
+  type: 'game_started'
 })
