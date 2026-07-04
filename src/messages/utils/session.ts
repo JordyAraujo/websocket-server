@@ -27,8 +27,11 @@ export function isJoinSessionMessage(value: unknown): value is JoinSessionMessag
     value.type === 'join_session' &&
     isObject(value.payload) &&
     typeof value.payload.sessionId === 'string' &&
+    value.payload.sessionId !== '' &&
     typeof value.payload.clientId === 'string' &&
-    typeof value.payload.playerName === 'string'
+    value.payload.clientId !== '' &&
+    typeof value.payload.playerName === 'string' &&
+    value.payload.playerName !== ''
   )
 }
 
@@ -38,14 +41,18 @@ export function isPlayerColorMessage(value: unknown): value is PlayerColorMessag
     value.type === 'player_color' &&
     isObject(value.payload) &&
     typeof value.payload.sessionId === 'string' &&
+    value.payload.sessionId !== '' &&
     typeof value.payload.clientId === 'string' &&
-    typeof value.payload.color === 'string'
+    value.payload.clientId !== '' &&
+    typeof value.payload.color === 'string' &&
+    value.payload.color !== ''
   )
 }
 
-export const createPlayersUpdatedMessage = (players: ControllerData[]): PlayersUpdatedMessage => ({
+export const createPlayersUpdatedMessage = (sessionId: string, players: ControllerData[]): PlayersUpdatedMessage => ({
   type: 'players_updated',
   payload: {
+    sessionId,
     players
   }
 })
@@ -55,7 +62,8 @@ export function isStartGameMessage(value: unknown): value is StartGameMessage {
     isObject(value) &&
     value.type === 'start_game' &&
     isObject(value.payload) &&
-    typeof value.payload.sessionId === 'string'
+    typeof value.payload.sessionId === 'string' &&
+    value.payload.sessionId !== ''
   )
 }
 

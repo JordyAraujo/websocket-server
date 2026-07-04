@@ -40,6 +40,7 @@ export interface PlayerColorMessage {
 export interface PlayersUpdatedMessage {
   type: 'players_updated'
   payload: {
+    sessionId: string
     players: ControllerData[]
   }
 }

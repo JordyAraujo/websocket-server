@@ -1,5 +1,6 @@
 import { WebSocket } from 'ws'
-import { sessions } from './sessions'
+import { Session, sessions } from './sessions'
+import { createErrorMessage } from './messages/utils/error'
 
 export type ClientType =
   | 'tv'
@@ -15,23 +16,23 @@ export interface Client {
 export const clients =
   new Map<WebSocket, Client>()
 
-export function setClient(socket: WebSocket, type: ClientType, sessionId: string, clientId: string, playerName: string = '') {
+export function setClient(socket: WebSocket, type: ClientType, session: Session, clientId: string, playerName: string = ''): Client {
   if (type === 'controller') {
-    const session = sessions.get(sessionId)
-    if (!session || !session.tv) return
-
     session.controllers.set(clientId, {
       socket: socket,
       clientId: clientId,
       playerName: playerName
     })
   }
+
   const client = {
     socket,
     type,
-    sessionId,
+    sessionId: session.id,
     clientId
   }
+
   clients.set(socket, client)
+  
   return client
 }

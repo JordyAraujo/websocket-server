@@ -21,7 +21,7 @@ export interface Session {
 
 export const sessions = new Map<string, Session>()
 
-export function createSession(tvSocket: WebSocket) {
+export function createSession(tvSocket: WebSocket): Session {
   const sessionId = generateSessionId()
   const session: Session = {
     id: sessionId,

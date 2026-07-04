@@ -3,7 +3,7 @@ import { debugClients, debugControllers, debugMessage } from "./debuggers"
 import { clients, setClient } from "./clients"
 import { createErrorMessage } from "./messages/utils/error"
 import { isCreateSessionMessage, createSessionCreatedMessage, isJoinSessionMessage, createPlayerJoinedMessage, isPlayerColorMessage, createPlayersUpdatedMessage, isStartGameMessage, createGameStartedMessage } from "./messages/utils/session"
-import { ControllerData, createSession, sessions } from "./sessions"
+import { createSession, sessions } from "./sessions"
 
 const MAX_PLAYERS_PER_SESSION = 4
 
@@ -18,7 +18,7 @@ wss.on('connection', (ws) => {
 
         if (isCreateSessionMessage(data)) {
             const session = createSession(ws)
-            const client = setClient(ws, 'tv', session.id, session.id)
+            const client = setClient(ws, 'tv', session, session.id)
             const message = createSessionCreatedMessage(session.id)
             ws.send(
                 JSON.stringify(message)
@@ -31,8 +31,15 @@ wss.on('connection', (ws) => {
         if (isJoinSessionMessage(data)) {
             const session = sessions.get(data.payload.sessionId)
 
-            if (!session || !session.tv) return
+            // TODO: Create a method to check if the session exists
+            if (!session || !session.tv) {
+                ws.send(
+                    JSON.stringify(createErrorMessage('Session not found'))
+                )
+                return
+            }
 
+            // TODO: Create a method to check if the session is full
             if (session.controllers.size >= MAX_PLAYERS_PER_SESSION) {
                 ws.send(
                     JSON.stringify(createErrorMessage('Session is full'))
@@ -40,13 +47,13 @@ wss.on('connection', (ws) => {
                 return
             }
 
-            setClient(ws, 'controller', data.payload.sessionId, data.payload.clientId, data.payload.playerName)
+            setClient(ws, 'controller', session, data.payload.clientId, data.payload.playerName)
 
             const message = createPlayerJoinedMessage({
                 clientId: data.payload.clientId,
                 playerName: data.payload.playerName
             })
-
+            
             session.tv.send(
                 JSON.stringify(message)
             )
@@ -59,14 +66,20 @@ wss.on('connection', (ws) => {
         if (isPlayerColorMessage(data)) {
             const session = sessions.get(data.payload.sessionId)
 
-            if (!session || !session.tv) return
+            // TODO: Create a method to check if the session exists
+            if (!session || !session.tv) {
+                ws.send(
+                    JSON.stringify(createErrorMessage('Session not found'))
+                )
+                return
+            }
 
             const updatedPlayer = session.controllers.get(data.payload.clientId)
             if (updatedPlayer) {
                 updatedPlayer.color = data.payload.color
             }
 
-            const message = createPlayersUpdatedMessage(Array.from(session.controllers.values()).map(c => ({
+            const message = createPlayersUpdatedMessage(data.payload.sessionId, Array.from(session.controllers.values()).map(c => ({
                 clientId: c.clientId,
                 playerName: c.playerName,
                 color: c.color
@@ -86,7 +99,13 @@ wss.on('connection', (ws) => {
         if (isStartGameMessage(data)) {
             const session = sessions.get(data.payload.sessionId)
 
-            if (!session || !session.tv) return
+            // TODO: Create a method to check if the session exists
+            if (!session || !session.tv) {
+                ws.send(
+                    JSON.stringify(createErrorMessage('Session not found'))
+                )
+                return
+            }
 
             const message = createGameStartedMessage()
 
