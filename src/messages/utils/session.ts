@@ -67,6 +67,9 @@ export function isStartGameMessage(value: unknown): value is StartGameMessage {
   )
 }
 
-export const createGameStartedMessage = (): GameStartedMessage => ({
-  type: 'game_started'
+export const createGameStartedMessage = (firstPlayerSessionId: string): GameStartedMessage => ({
+  type: 'game_started',
+  payload: {
+    firstPlayerSessionId
+  }
 })

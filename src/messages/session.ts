@@ -54,4 +54,7 @@ export interface StartGameMessage {
 
 export interface GameStartedMessage {
   type: 'game_started'
+  payload: {
+    firstPlayerSessionId: string
+  }
 }

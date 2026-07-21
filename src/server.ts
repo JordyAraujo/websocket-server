@@ -53,7 +53,7 @@ wss.on('connection', (ws) => {
                 clientId: data.payload.clientId,
                 playerName: data.payload.playerName
             })
-            
+
             session.tv.send(
                 JSON.stringify(message)
             )
@@ -107,7 +107,14 @@ wss.on('connection', (ws) => {
                 return
             }
 
-            const message = createGameStartedMessage()
+            const firstPlayer = Array.from(session.controllers.values())[Math.floor(Math.random() * session.controllers.size)];
+
+            const message = createGameStartedMessage(firstPlayer.clientId)
+
+            session.tv.send(
+                JSON.stringify(message)
+            )
+            debugMessage(message, session.id)
 
             session.controllers.forEach((controller) => {
                 controller.socket.send(

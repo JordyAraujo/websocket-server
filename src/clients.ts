@@ -33,6 +33,6 @@ export function setClient(socket: WebSocket, type: ClientType, session: Session,
   }
 
   clients.set(socket, client)
-  
+
   return client
 }
